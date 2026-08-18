@@ -30,7 +30,9 @@ export const runMigrations = async (): Promise<void> => {
 
     const migrationsDir = candidateDirs.find((dir) => fs.existsSync(dir));
     if (!migrationsDir) {
-      console.warn(`[Migration] Migrations directory not found in candidates: ${candidateDirs.join(", ")}`);
+      console.warn(
+        `[Migration] Migrations directory not found in candidates: ${candidateDirs.join(", ")}`
+      );
       return;
     }
 

@@ -9,6 +9,7 @@ export default tseslint.config(
       "**/build/**",
       "**/coverage/**",
       "**/.docker/**",
+      "**/.vite/**",
       "**/*.d.ts",
     ],
   },

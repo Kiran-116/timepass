@@ -5,3 +5,4 @@ coverage
 *.log
 .docker
 *.md
+*.sql

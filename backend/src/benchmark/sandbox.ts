@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { SandboxExecutionResult } from "./types";
+import type { SandboxExecutionResult } from "./types.ts";
 
 // Check if Docker daemon is accessible
 export async function checkDockerAvailable(): Promise<{ available: boolean; error?: string }> {

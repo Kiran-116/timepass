@@ -1,6 +1,6 @@
-import { executeInDockerSandbox } from "./sandbox";
-import { computeMetricStatistics } from "./telemetry";
-import { BenchmarkOptions, BenchmarkResult, SingleRunResult } from "./types";
+import { executeInDockerSandbox } from "./sandbox.ts";
+import { computeMetricStatistics } from "./telemetry.ts";
+import type { BenchmarkOptions, BenchmarkResult, SingleRunResult } from "./types.ts";
 
 export async function runBenchmark(options: BenchmarkOptions): Promise<BenchmarkResult> {
   const {

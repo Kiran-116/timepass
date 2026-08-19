@@ -1,19 +1,42 @@
 :root {
-  --bg-primary: #090d16;
-  --bg-secondary: #111827;
-  --bg-card: rgba(17, 24, 39, 0.75);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(16, 185, 129, 0.2);
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --accent-green: #10b981;
-  --accent-green-glow: rgba(16, 185, 129, 0.15);
-  --accent-blue: #3b82f6;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
-  --font-main:
-    "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* GreenOps Palette Hierarchy */
+  --go-bg-dark: #070d0b;
+  --go-header-bg: rgba(6, 26, 18, 0.90);
+  --go-card-bg: rgba(9, 32, 23, 0.75);
+  --go-card-glow: rgba(16, 185, 129, 0.15);
+  --go-border-subtle: rgba(52, 211, 153, 0.15);
+  --go-border-glow: rgba(52, 211, 153, 0.4);
+
+  /* Shades of Green */
+  --go-forest-950: #061a12;
+  --go-emerald-900: #064e3b;
+  --go-emerald-700: #047857;
+  --go-emerald-600: #059669;
+  --go-emerald-500: #10b981;
+  --go-mint-400: #34d399;
+  --go-mint-300: #6ee7b7;
+  --go-mint-100: #d1fae5;
+
+  /* Gradients */
+  --go-gradient-hero: linear-gradient(135deg, #047857 0%, #10b981 50%, #34d399 100%);
+  --go-gradient-glass: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 78, 59, 0.15) 100%);
+  --go-gradient-verified: linear-gradient(135deg, #059669 0%, #10b981 100%);
+
+  /* Legacy & General Tokens */
+  --bg-primary: var(--go-bg-dark);
+  --bg-secondary: #0c1813;
+  --bg-card: var(--go-card-bg);
+  --border-color: var(--go-border-subtle);
+  --border-glow: var(--go-border-glow);
+  --text-primary: #f0fdf4;
+  --text-secondary: #a7f3d0;
+  --text-muted: #6ee7b7;
+  --accent-green: var(--go-emerald-500);
+  --accent-green-glow: rgba(16, 185, 129, 0.25);
+  --accent-blue: #38bdf8;
+  --accent-amber: #fbbf24;
+  --accent-red: #f87171;
+  --font-main: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
@@ -25,13 +48,14 @@
 
 body {
   font-family: var(--font-main);
-  background-color: var(--bg-primary);
+  background-color: var(--go-bg-dark);
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.5;
   background-image:
-    radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(52, 211, 153, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(4, 120, 87, 0.05) 0%, transparent 60%);
   background-attachment: fixed;
 }
 
@@ -388,19 +412,234 @@ ul li {
   font-size: 0.85rem;
 }
 
-@media (max-width: 800px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  .nav-menu {
-    flex-wrap: wrap;
-  }
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .metrics {
-    grid-template-columns: 1fr;
-  }
+}
+
+/* --- GreenOps 3D & Sustainability Visual System --- */
+
+.greenops-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* 3D Glassmorphism Card Depth Base */
+.greenops-card-3d {
+  background: linear-gradient(135deg, rgba(6, 26, 18, 0.85) 0%, rgba(9, 36, 25, 0.70) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 15px 35px -10px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(16, 185, 129, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.greenops-card-3d:hover {
+  transform: translateY(-3px) scale(1.002);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 
+    0 22px 45px -12px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(16, 185, 129, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Score Hero Badge */
+.greenops-hero-score-badge {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.25) 0%, rgba(6, 26, 18, 0.85) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.greenops-score-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--go-gradient-hero);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #042f22;
+  box-shadow: 0 0 25px rgba(52, 211, 153, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+/* Key Metrics 3D Stat Cards */
+.greenops-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.greenops-stat-card {
+  padding: 1.5rem;
+  border-radius: 14px;
+  background: rgba(6, 26, 18, 0.65);
+  border: 1px solid rgba(52, 211, 153, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+
+.greenops-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--go-gradient-hero);
+}
+
+.greenops-stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--go-mint-100);
+  margin: 0.25rem 0;
+}
+
+.greenops-stat-drop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--go-mint-300);
+  background: rgba(16, 185, 129, 0.15);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+/* Central Before -> After Data Story Visual */
+.greenops-comparison-card {
+  padding: 2rem;
+}
+
+.greenops-comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+.greenops-comparison-header h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--go-mint-100);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.greenops-metric-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.greenops-metric-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 1fr 140px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: rgba(4, 26, 18, 0.6);
+  border: 1px solid rgba(52, 211, 153, 0.12);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.greenops-metric-row:hover {
+  background: rgba(6, 44, 30, 0.6);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.greenops-metric-name {
+  font-weight: 700;
+  color: var(--go-mint-300);
+  font-size: 0.95rem;
+}
+
+.greenops-before-val {
+  font-family: var(--font-mono);
+  color: #9ca3af;
+  font-size: 0.95rem;
+  text-decoration: line-through rgba(239, 68, 68, 0.5);
+}
+
+.greenops-after-val {
+  font-family: var(--font-mono);
+  color: #34d399;
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.greenops-flow-arrow {
+  color: var(--go-emerald-500);
+  font-size: 1.1rem;
+}
+
+/* Verified Banner Card */
+.greenops-verified-banner {
+  margin-top: 1.75rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(6, 26, 18, 0.9) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.greenops-verified-text {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.greenops-verified-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--go-gradient-hero);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
+}
+
+.greenops-verified-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--go-mint-100);
+}
+
+.greenops-verified-sub {
+  font-size: 0.85rem;
+  color: var(--go-mint-300);
+}
+
+.greenops-reduction-badge {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--go-mint-100);
+  background: rgba(16, 185, 129, 0.2);
+  padding: 0.5rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
 }

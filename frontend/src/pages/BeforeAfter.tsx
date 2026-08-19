@@ -1,42 +1,21 @@
-export default function BeforeAfter() {
-  const metrics = [
-    ["Runtime", "2.8 s", "1.6 s"],
-    ["CPU", "78%", "51%"],
-    ["Memory", "420 MB", "310 MB"],
-    ["Energy", "65 Wh", "38 Wh"],
-    ["CO₂e", "28 g", "16 g"],
-  ];
+import { GreenOpsComparisonFlow } from "../components/GreenOpsComparisonFlow";
 
+export default function BeforeAfter() {
   return (
     <div className="page">
-      <h1>Before / After</h1>
-
-      <p>Compare environmental performance before and after optimization.</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Before</th>
-            <th>After</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {metrics.map(([metric, before, after]) => (
-            <tr key={metric}>
-              <td>{metric}</td>
-              <td>{before}</td>
-              <td>{after}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="reduction-card">
-        <h2>Reduction</h2>
-        <strong>41.5%</strong>
+      <div style={{ marginBottom: "2rem" }}>
+        <h1>Before / After Sustainability Story</h1>
+        <p>Experimental measurement comparing baseline code versus AI-optimized implementation.</p>
       </div>
+
+      <GreenOpsComparisonFlow
+        score={86}
+        energyWh={0.020}
+        energyReductionPercent={67.2}
+        carbonGrams={0.014}
+        carbonReductionPercent={67.4}
+        isVerified={true}
+      />
     </div>
   );
 }

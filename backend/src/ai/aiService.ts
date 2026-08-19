@@ -4,9 +4,9 @@
  * Manages persisting AI recommendations into PostgreSQL optimizations table.
  */
 
-import { pool } from "../db/index.ts";
-import { aiAgentEngine } from "./aiAgent.ts";
-import type { AiAgentInputContext, AiAgentOutput } from "./types.ts";
+import { pool } from "../db/index";
+import { aiAgentEngine } from "./aiAgent";
+import type { AiAgentInputContext, AiAgentOutput } from "./types";
 
 export async function generateAndRecordOptimization(
   analysisId: string,

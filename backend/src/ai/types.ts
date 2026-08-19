@@ -5,9 +5,9 @@
  * Defines structured context input and structured optimization output schemas.
  */
 
-import type { CodeFinding } from "../analyzer/staticAnalyzer.ts";
-import type { CarbonCalculationResult } from "../carbon/carbonEngine.ts";
-import type { EnergyCalculationResult } from "../energy/energyEngine.ts";
+import type { AnalysisFinding } from "../analyzer/staticAnalyzer";
+import type { CarbonCalculationResult } from "../carbon/carbonEngine";
+import type { EnergyCalculationResult } from "../energy/energyEngine";
 
 export interface TelemetryContext {
   executionTimeMs: number;
@@ -19,7 +19,7 @@ export interface AiAgentInputContext {
   code: string;
   language?: string;
   fileName?: string;
-  findings?: CodeFinding[];
+  findings?: AnalysisFinding[];
   telemetry?: TelemetryContext;
   energy?: EnergyCalculationResult;
   carbon?: CarbonCalculationResult;

@@ -4,10 +4,9 @@
  * Manages calculating and persisting operational CO2e in PostgreSQL carbon_measurements table.
  */
 
-import { pool } from "../db/index.ts";
-import type { EnergyCalculationResult } from "../energy/energyEngine.ts";
-import { carbonEngine, type CarbonCalculationResult } from "./carbonEngine.ts";
-import { staticCarbonProvider } from "./carbonIntensityProvider.ts";
+import { pool } from "../db/index";
+import type { EnergyCalculationResult } from "../energy/energyEngine";
+import { carbonEngine, type CarbonCalculationResult } from "./carbonEngine";
 
 export async function calculateAndRecordCarbon(
   energyMeasurementDbId: string,

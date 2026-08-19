@@ -5,8 +5,8 @@
  * Generates structured optimizations & explanations without fabricating numerical carbon metrics.
  */
 
-import { buildUserPrompt, SYSTEM_PROMPT } from "./prompts.ts";
-import type { AiAgentInputContext, AiAgentOutput, ExpectedImpactQualitative } from "./types.ts";
+import { buildUserPrompt, SYSTEM_PROMPT } from "./prompts";
+import type { AiAgentInputContext, AiAgentOutput, ExpectedImpactQualitative, ResourceImpactQualitative } from "./types";
 
 // Safe env loader fallback
 try {
@@ -79,7 +79,7 @@ export class AiAgentEngine {
         throw new Error(`OpenAI API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       const content = data.choices?.[0]?.message?.content;
       return JSON.parse(content);
     } else {
@@ -106,7 +106,7 @@ export class AiAgentEngine {
         throw new Error(`Gemini API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       return JSON.parse(rawText);
     }
@@ -225,7 +225,7 @@ const results = rawData.map(item => memoizedData + item);
       : "// Optimized code functionally equivalent";
 
     // Sanitize Expected Impact (Qualitative only: lower | similar | higher)
-    const rawImpact = raw.expectedImpact || {};
+    const rawImpact: any = raw.expectedImpact || {};
     const expectedImpact: ExpectedImpactQualitative = {
       cpu: this.sanitizeQualitativeImpact(rawImpact.cpu),
       runtime: this.sanitizeQualitativeImpact(rawImpact.runtime),
@@ -252,7 +252,7 @@ const results = rawData.map(item => memoizedData + item);
     };
   }
 
-  private sanitizeQualitativeImpact(val: any): "lower" | "similar" | "higher" {
+  private sanitizeQualitativeImpact(val: any): ResourceImpactQualitative {
     if (val === "lower" || val === "similar" || val === "higher") {
       return val;
     }

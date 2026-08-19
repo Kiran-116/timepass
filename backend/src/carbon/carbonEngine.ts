@@ -5,8 +5,8 @@
  * Converts estimated energy consumption (Wh) into operational CO2e (grams).
  */
 
-import type { EnergyCalculationResult } from "../energy/energyEngine.ts";
-import { staticCarbonProvider, type CarbonIntensityProvider } from "./carbonIntensityProvider.ts";
+import type { EnergyCalculationResult } from "../energy/energyEngine";
+import { staticCarbonProvider, type CarbonIntensityProvider } from "./carbonIntensityProvider";
 
 export interface CarbonCalculationResult {
   carbonEmissionsGrams: number;  // Operational CO2e in grams (gCO2e)

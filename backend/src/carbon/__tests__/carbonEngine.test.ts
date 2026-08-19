@@ -13,10 +13,10 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { energyEngine } from "../../energy/energyEngine.ts";
-import { DEMO_POWER_PROFILE } from "../../energy/powerModel.ts";
-import { CarbonEngine, carbonEngine } from "../carbonEngine.ts";
-import { StaticCarbonIntensityProvider } from "../carbonIntensityProvider.ts";
+import { energyEngine } from "../../energy/energyEngine";
+import { DEMO_POWER_PROFILE } from "../../energy/powerModel";
+import { CarbonEngine, carbonEngine } from "../carbonEngine";
+import { StaticCarbonIntensityProvider } from "../carbonIntensityProvider";
 
 describe("Phase 7: Carbon Engine Unit Tests", () => {
   // Test 1: Exact PRD Example Formula Check (0.05 Wh * 600 g/kWh = 0.03 g CO2e)

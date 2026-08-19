@@ -5,7 +5,7 @@
  * Converts runtime telemetry into estimated energy consumption in Watt-hours (Wh).
  */
 
-import { DEMO_POWER_PROFILE, type PowerModel } from "./powerModel.ts";
+import { DEMO_POWER_PROFILE, type PowerModel } from "./powerModel";
 
 export interface EnergyTelemetryInput {
   executionTimeMs: number;

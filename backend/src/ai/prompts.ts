@@ -5,7 +5,7 @@
  * Enforces structured JSON output and forbids LLMs from fabricating numerical carbon claims.
  */
 
-import type { AiAgentInputContext } from "./types.ts";
+import type { AiAgentInputContext } from "./types";
 
 export const SYSTEM_PROMPT = `
 You are GreenOps AI, an expert sustainability and code optimization engine.

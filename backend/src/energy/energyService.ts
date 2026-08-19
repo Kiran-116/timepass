@@ -4,9 +4,9 @@
  * Manages calculating and persisting energy measurements in PostgreSQL energy_measurements table.
  */
 
-import { pool } from "../db/index.ts";
-import { energyEngine, type EnergyCalculationResult, type EnergyTelemetryInput } from "./energyEngine.ts";
-import { DEMO_POWER_PROFILE, type PowerModel } from "./powerModel.ts";
+import { pool } from "../db/index";
+import { energyEngine, type EnergyCalculationResult, type EnergyTelemetryInput } from "./energyEngine";
+import { DEMO_POWER_PROFILE, type PowerModel } from "./powerModel";
 
 export async function calculateAndRecordEnergy(
   analysisId: string,

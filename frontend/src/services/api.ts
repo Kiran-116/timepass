@@ -1,264 +1,334 @@
-export interface Finding {
-  id: number | string;
-  type?: string;
-  category?: string;
-  severity: string;
-  title?: string;
-  description: string;
+/**
+ * GreenOps AI - Frontend API Service
+ * 
+ * Connects frontend views with backend Phase 11 APIs:
+ * - Code Analysis Submission (POST /api/analyses)
+ * - Async Polling & Live Progress Tracking (GET /api/analyses/:analysisId)
+ * - Recent Analyses History (GET /api/analyses)
+ * - Verification & Benchmark telemetry
+ */
+
+export interface AnalysisFinding {
+  id?: number | string;
+  category: string;
+  severity: "HIGH" | "MEDIUM" | "LOW" | string;
+  file: string;
   line: number;
+  description: string;
   recommendation: string;
-  file?: string;
+  type?: string;
+  title?: string;
 }
 
-export interface AnalysisSummary {
-  totalFindings: number;
-  high: number;
-  medium: number;
-  low: number;
+export interface MetricComparison {
+  original: number;
+  optimized: number;
+  reductionPercent: number;
+  unit: string;
 }
 
-export interface AnalysisResponse {
+export interface AiExplanation {
+  problem: string;
+  whyItMatters: string;
+  optimization: string;
+  expectedImpact: {
+    cpu: string;
+    runtime: string;
+    memory: string;
+  };
+  modelMetadata?: {
+    provider: string;
+    model: string;
+    isFallback: boolean;
+  };
+}
+
+export interface EnergyResult {
+  energyWh: number;
+  energyJoules: number;
+  estimatedPowerWatts: number;
+  executionTimeMs: number;
+  measurementType: string;
+  confidenceLabel: string;
+  breakdown?: {
+    baselinePowerWatts: number;
+    dynamicPowerWatts: number;
+    memoryPowerWatts: number;
+  };
+}
+
+export interface CarbonResult {
+  carbonEmissionsGrams: number;
+  carbonEmissionsKg: number;
+  energyWh: number;
+  carbonIntensity: number;
+  region: string;
+  unit: string;
+}
+
+export interface VerificationCheck {
   id: string;
-  fileName: string;
-  status: string;
-  language: string;
+  name: string;
+  passed: boolean;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  description: string;
+  measuredValue?: string | number;
+  threshold?: string | number;
+}
+
+export interface VerificationResult {
+  verificationId: string;
+  status: "VERIFIED" | "REJECTED" | "INCONCLUSIVE" | "PENDING";
+  passed: boolean;
+  summary: string;
+  energyReductionPercent: number;
+  carbonReductionPercent: number;
+  runtimeReductionPercent: number;
+  cpuReductionPercent: number;
+  memoryReductionPercent: number;
+  checks: VerificationCheck[];
+  verifiedBy?: string;
+  verifiedAt?: string;
+}
+
+export interface GreenScoreBreakdown {
+  energyEfficiency: number;
+  computeEfficiency: number;
+  memoryEfficiency: number;
+  codeQuality: number;
+}
+
+export interface GreenScoreResult {
   score: number;
-  energy: number;
-  co2e: number;
-  findings: Finding[];
-  recommendations: string[];
-  summary?: AnalysisSummary;
+  originalScore: number;
+  optimizedScore: number;
+  improvement: number;
+  grade: "A+" | "A" | "B" | "C" | "D" | "F";
+  breakdown: GreenScoreBreakdown;
+  summary: string;
 }
 
-export interface MetricStats {
-  median: number;
-  average: number;
-  min: number;
-  max: number;
-}
-
-export interface BenchmarkResponse {
-  benchmarkId: string;
-  status: string;
-  language: string;
+export interface SingleRunResult {
+  runIndex: number;
+  isWarmup: boolean;
   executionTimeMs: number;
   cpuUsagePercent: number;
   memoryMb: number;
-  statistics: {
-    executionTimeMs: MetricStats;
-    cpuUsagePercent: MetricStats;
-    memoryMb: MetricStats;
+  exitCode: number;
+}
+
+export interface BenchmarkResult {
+  benchmarkId: string;
+  status: "COMPLETED" | "FAILED";
+  language: string;
+  fileName: string;
+  codeVersion: string;
+  executionTimeMs: number;
+  cpuUsagePercent: number;
+  memoryMb: number;
+  statistics?: {
+    executionTimeMs: { median: number; average: number; min: number; max: number };
+    cpuUsagePercent: { median: number; average: number; min: number; max: number };
+    memoryMb: { median: number; average: number; min: number; max: number };
   };
   warmupRuns: number;
   measuredRuns: number;
 }
 
+export interface AnalysisSummary {
+  totalFindings: number;
+  highFindings: number;
+  mediumFindings: number;
+  lowFindings: number;
+  energyReductionPercent: number;
+  carbonReductionPercent: number;
+  runtimeReductionPercent: number;
+  verificationStatus: string;
+  greenScore: number;
+  grade: string;
+}
+
+export interface FullAnalysisJob {
+  analysisId: string;
+  id: string; // compatibility alias
+  projectId?: string | null;
+  status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  stage: string;
+  stageProgress: number; // 0-100%
+  language: string;
+  fileName: string;
+  originalCode: string;
+  optimizedCode?: string;
+
+  findings: AnalysisFinding[];
+  aiExplanation?: AiExplanation;
+  benchmarks?: {
+    original: BenchmarkResult;
+    optimized: BenchmarkResult;
+  };
+  runtimeMetrics?: {
+    executionTimeMs: MetricComparison;
+    cpuUsagePercent: MetricComparison;
+    memoryMb: MetricComparison;
+  };
+  energy?: {
+    original: EnergyResult;
+    optimized: EnergyResult;
+    reductionPercent: number;
+    savingsWh: number;
+    savingsJoules: number;
+  };
+  carbon?: {
+    original: CarbonResult;
+    optimized: CarbonResult;
+    reductionPercent: number;
+    savingsGrams: number;
+    region: string;
+  };
+  verification?: VerificationResult;
+  greenScore?: GreenScoreResult;
+  summary?: AnalysisSummary;
+
+  score: number; // top-level score alias
+  error?: string;
+  failedStage?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const mockResponse: AnalysisResponse = {
-  id: "analysis-001",
-  fileName: "sample-code.py",
-  status: "completed",
-  language: "python",
-  score: 72,
-  energy: 42.5,
-  co2e: 18.2,
-  findings: [
-    {
-      id: 1,
-      type: "Performance",
-      category: "NESTED_ITERATION",
-      severity: "HIGH",
-      title: "Nested loop detected",
-      description:
-        "Potential compute hotspot: nested iteration can cause quadratic growth in computation.",
-      line: 12,
-      recommendation:
-        "Consider reducing nested iteration, using a more efficient algorithm, or using a suitable lookup structure.",
-      file: "sample-code.py",
-    },
-    {
-      id: 2,
-      type: "Database",
-      category: "N_PLUS_ONE_QUERY",
-      severity: "HIGH",
-      title: "N+1 query pattern",
-      description:
-        "A database operation appears inside a loop and may create an N+1 query pattern.",
-      line: 28,
-      recommendation:
-        "Move the database operation outside the loop or use batching/eager loading where appropriate.",
-      file: "sample-code.py",
-    },
-    {
-      id: 3,
-      type: "API",
-      category: "REPEATED_API_CALL",
-      severity: "HIGH",
-      title: "Repeated API calls",
-      description: "An API call appears inside a loop and may repeatedly perform network work.",
-      line: 41,
-      recommendation:
-        "Batch requests, cache reusable responses, or move the API call outside the loop where possible.",
-      file: "sample-code.py",
-    },
-  ],
-  recommendations: [
-    "Optimize nested loops to reduce quadratic compute time.",
-    "Use batch database queries to eliminate N+1 latency.",
-    "Cache and reuse API responses to eliminate redundant network transmissions.",
-  ],
-  summary: {
-    totalFindings: 3,
-    high: 3,
-    medium: 0,
-    low: 0,
-  },
-};
-
-export const analyzeCode = async (
+/**
+ * Creates and starts a new analysis pipeline job
+ */
+export const createAnalysisJob = async (
   code: string,
   language: string = "python",
   fileName: string = "service.py"
-): Promise<AnalysisResponse> => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/analyses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, language, fileName }),
-    });
+): Promise<{ analysisId: string; status: string; stage: string; stageProgress: number }> => {
+  const res = await fetch(`${API_BASE_URL}/api/analyses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, language, fileName }),
+  });
 
-    if (res.ok) {
-      const data = await res.json();
-      const findings: Finding[] = (data.findings || []).map((f: any, idx: number) => ({
-        id: idx + 1,
-        type: f.category?.replace(/_/g, " ") || "Code Smell",
-        category: f.category,
-        severity: f.severity || "MEDIUM",
-        title: f.category?.replace(/_/g, " ") || "Sustainability Finding",
-        description: f.description,
-        line: f.line,
-        recommendation: f.recommendation,
-        file: f.file || fileName,
-      }));
-
-      const highCount = findings.filter((f) => f.severity === "HIGH").length;
-      const medCount = findings.filter((f) => f.severity === "MEDIUM").length;
-      const lowCount = findings.filter((f) => f.severity === "LOW").length;
-
-      const score = Math.max(10, Math.min(100, 100 - highCount * 14 - medCount * 7 - lowCount * 3));
-      const energy = Number((12.5 + highCount * 11.2 + medCount * 5.4).toFixed(1));
-      const co2e = Number((energy * 0.43).toFixed(1));
-
-      const recommendations = Array.from(
-        new Set(findings.map((f) => f.recommendation).filter(Boolean))
-      );
-
-      return {
-        id: data.id || `analysis-${Date.now()}`,
-        fileName,
-        status: data.status || "COMPLETED",
-        language,
-        score,
-        energy,
-        co2e,
-        findings,
-        recommendations:
-          recommendations.length > 0
-            ? recommendations
-            : ["Code meets efficiency standards. No critical hotspots detected."],
-        summary: data.summary || {
-          totalFindings: findings.length,
-          high: highCount,
-          medium: medCount,
-          low: lowCount,
-        },
-      };
-    }
-  } catch (err) {
-    console.warn("[GreenOps API] Backend unreachable, using fallback response:", err);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Analysis request failed: ${res.statusText}`);
   }
 
-  // Graceful Fallback
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return {
-    ...mockResponse,
-    language,
-    fileName,
-  };
+  return await res.json();
 };
 
-export const getAnalysis = async (analysisId: string): Promise<AnalysisResponse> => {
-  // Check if analysis is saved in localStorage
+/**
+ * Polls the analysis endpoint until the job finishes or fails
+ */
+export const pollAnalysisJob = async (
+  analysisId: string,
+  onProgress?: (job: FullAnalysisJob) => void,
+  maxAttempts: number = 60,
+  intervalMs: number = 800
+): Promise<FullAnalysisJob> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`);
+      if (res.ok) {
+        const job: FullAnalysisJob = await res.json();
+        if (onProgress) onProgress(job);
+
+        if (job.status === "COMPLETED") {
+          localStorage.setItem("greenops-analysis", JSON.stringify(job));
+          return job;
+        }
+
+        if (job.status === "FAILED") {
+          throw new Error(job.error || "Analysis pipeline failed during execution.");
+        }
+      }
+    } catch (err) {
+      if ((err as Error).message.includes("Analysis pipeline failed")) {
+        throw err;
+      }
+      console.warn(`[Polling attempt ${attempt + 1}] Check failed, retrying...`, err);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error("Analysis job timed out. The server is still processing or unavailable.");
+};
+
+/**
+ * Convenience analyzeCode function that initiates the job and polls to completion
+ */
+export const analyzeCode = async (
+  code: string,
+  language: string = "python",
+  fileName: string = "service.py",
+  onProgress?: (job: FullAnalysisJob) => void
+): Promise<FullAnalysisJob> => {
+  const job = await createAnalysisJob(code, language, fileName);
+  return await pollAnalysisJob(job.analysisId, onProgress);
+};
+
+/**
+ * Retrieves a single analysis by ID (checking API first, then localStorage fallback)
+ */
+export const getAnalysis = async (analysisId?: string): Promise<FullAnalysisJob | null> => {
+  // If specific analysisId provided, fetch from backend
+  if (analysisId && analysisId !== "latest") {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`);
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("greenops-analysis", JSON.stringify(data));
+        return data;
+      }
+    } catch (err) {
+      console.warn("[GreenOps API] Failed to fetch analysis by ID:", err);
+    }
+  }
+
+  // Fallback to localStorage
   try {
     const saved = localStorage.getItem("greenops-analysis");
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && (!analysisId || parsed.id === analysisId)) {
-        return parsed;
-      }
+      return JSON.parse(saved);
     }
   } catch {
     // Ignore localStorage parse error
   }
 
+  // Fallback: Fetch latest recent analysis from API
   try {
-    const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`);
+    const res = await fetch(`${API_BASE_URL}/api/analyses`);
     if (res.ok) {
       const data = await res.json();
-      return {
-        ...mockResponse,
-        id: data.id || analysisId,
-        status: data.status || "COMPLETED",
-      };
+      if (data.analyses && data.analyses.length > 0) {
+        const latest = data.analyses[0];
+        localStorage.setItem("greenops-analysis", JSON.stringify(latest));
+        return latest;
+      }
     }
   } catch {
-    // Ignore fetch error
+    // Ignore
   }
 
-  return {
-    ...mockResponse,
-    id: analysisId,
-  };
+  return null;
 };
 
-export const runBenchmark = async (
-  code: string,
-  language: string = "python",
-  fileName: string = "benchmark.py"
-): Promise<BenchmarkResponse> => {
+/**
+ * Retrieves recent analyses
+ */
+export const getRecentAnalyses = async (limit: number = 10): Promise<FullAnalysisJob[]> => {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/benchmarks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, language, fileName }),
-    });
-
+    const res = await fetch(`${API_BASE_URL}/api/analyses`);
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      return (data.analyses || []).slice(0, limit);
     }
   } catch (err) {
-    console.warn(
-      "[GreenOps API] Benchmark server unreachable, using standard telemetry model:",
-      err
-    );
+    console.warn("[GreenOps API] Failed to fetch recent analyses:", err);
   }
-
-  // Fallback telemetry calculation
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    benchmarkId: `bm-${Date.now()}`,
-    status: "COMPLETED",
-    language,
-    executionTimeMs: 1620,
-    cpuUsagePercent: 51.2,
-    memoryMb: 310.4,
-    statistics: {
-      executionTimeMs: { median: 1620, average: 1645, min: 1590, max: 1710 },
-      cpuUsagePercent: { median: 51.2, average: 51.8, min: 49.5, max: 54.0 },
-      memoryMb: { median: 310.4, average: 312.0, min: 308.0, max: 318.5 },
-    },
-    warmupRuns: 2,
-    measuredRuns: 5,
-  };
+  return [];
 };

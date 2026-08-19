@@ -12,11 +12,11 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { BenchmarkResult } from "../../benchmark/types";
-import type { CarbonCalculationResult } from "../../carbon/carbonEngine";
-import type { EnergyCalculationResult } from "../../energy/energyEngine";
-import type { VerificationInputContext } from "../types";
-import { VerificationEngine, verificationEngine } from "../verificationEngine";
+import type { BenchmarkResult } from "../../benchmark/types.ts";
+import type { CarbonCalculationResult } from "../../carbon/carbonEngine.ts";
+import type { EnergyCalculationResult } from "../../energy/energyEngine.ts";
+import type { VerificationInputContext } from "../types.ts";
+import { VerificationEngine, verificationEngine } from "../verificationEngine.ts";
 
 function createMockBenchmark(overrides: Partial<BenchmarkResult> = {}): BenchmarkResult {
   return {

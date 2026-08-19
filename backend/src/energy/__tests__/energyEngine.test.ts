@@ -13,8 +13,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { energyEngine } from "../energyEngine";
-import { ARM_EFFICIENT_PROFILE, CLOUD_STANDARD_PROFILE, ConfigurablePowerModel, DEMO_POWER_PROFILE } from "../powerModel";
+import { energyEngine } from "../energyEngine.ts";
+import { ARM_EFFICIENT_PROFILE, CLOUD_STANDARD_PROFILE, ConfigurablePowerModel, DEMO_POWER_PROFILE } from "../powerModel.ts";
 
 describe("Phase 6: Energy Estimation Engine Unit Tests", () => {
   // Test 1: Normal runtime calculation

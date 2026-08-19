@@ -141,6 +141,17 @@ export class AiAgentEngine {
       };
     }
 
+    // Pattern 3: Redundant Memory Allocation & List Copying
+    if (code.includes("copy") || code.includes("step") || code.includes("temp") || code.includes("memory") || code.includes("duplication") || code.includes("map(")) {
+      return {
+        problem: "Redundant array duplication & intermediate in-memory list allocations detected.",
+        whyItMatters: "Allocating intermediate array copies inflates RAM footprint and triggers excess GC overhead.",
+        optimization: "Use a streaming generator iterator or single-pass transformation to process items in-place.",
+        optimizedCode: this.optimizeMemoryBloatCode(code, lang),
+        expectedImpact: { cpu: "lower", runtime: "lower", memory: "lower" }
+      };
+    }
+
     // Default Inefficiency Refactoring
     return {
       problem: "Sequential resource allocation and redundant variable recalculation detected.",
@@ -154,6 +165,22 @@ export class AiAgentEngine {
   /**
    * Helper code transformers for fallback optimizations
    */
+  private optimizeMemoryBloatCode(code: string, lang: string): string {
+    if (lang === "python") {
+      return `# Optimized GreenOps AI Code (Streaming Generator Iterator)
+def process_large_data(data_list):
+    # Single streaming generator avoids intermediate list copies in memory
+    return list((item * 2 + 10 for item in data_list))
+`;
+    }
+    return `// Optimized GreenOps AI Code (Single-Pass Transformation)
+function processLargeData(data) {
+    // Single-pass transformation avoids redundant array allocations
+    return data.map(x => (x * 2) + 10);
+}
+`;
+  }
+
   private optimizeNPlusOneCode(code: string, lang: string): string {
     if (lang === "python") {
       return `# Optimized GreenOps AI Code (Batched Bulk Query)

@@ -1,4 +1,4 @@
-import { MetricStatistics } from "./types";
+import type { MetricStatistics } from "./types.ts";
 
 export function calculateMedian(values: number[]): number {
   if (values.length === 0) return 0;

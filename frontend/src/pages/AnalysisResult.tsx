@@ -7,12 +7,7 @@ import {
   ArrowDownRight,
   ArrowRight,
   CheckCircle2,
-  Clock,
-  Cpu,
   FileCode,
-  Flame,
-  Globe,
-  HardDrive,
   Leaf,
   Loader2,
   RefreshCw,
@@ -22,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { FullAnalysisJob, getAnalysis } from "../services/api";
+import { BeforeAfterMetricsMatrix } from "../components/BeforeAfterMetricsMatrix";
 
 export default function AnalysisResult() {
   const [searchParams] = useSearchParams();
@@ -31,7 +27,9 @@ export default function AnalysisResult() {
   const [analysis, setAnalysis] = useState<FullAnalysisJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [activeCodeTab, setActiveCodeTab] = useState<"side_by_side" | "original" | "optimized">("side_by_side");
+  const [activeCodeTab, setActiveCodeTab] = useState<"side_by_side" | "original" | "optimized">(
+    "side_by_side"
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -65,7 +63,9 @@ export default function AnalysisResult() {
         <div className="loading-card">
           <Loader2 className="animate-spin text-emerald-400" size={36} />
           <h2>Loading Analysis Results...</h2>
-          <p className="text-muted">Fetching measured telemetry, verified energy data, and Green Scores.</p>
+          <p className="text-muted">
+            Fetching measured telemetry, verified energy data, and Green Scores.
+          </p>
         </div>
       </div>
     );
@@ -77,7 +77,9 @@ export default function AnalysisResult() {
         <div className="empty-state-card">
           <AlertTriangle className="text-amber-400" size={40} />
           <h2>{errorMsg || "No Analysis Found"}</h2>
-          <p className="text-muted">Submit your code to execute the GreenOps AI analysis and verification workflow.</p>
+          <p className="text-muted">
+            Submit your code to execute the GreenOps AI analysis and verification workflow.
+          </p>
           <button className="btn-primary mt-4" onClick={() => navigate("/code-analysis")}>
             Analyze Code Now <ArrowRight size={16} />
           </button>
@@ -97,29 +99,10 @@ export default function AnalysisResult() {
     codeQuality: 80,
   };
 
-  const isVerified = analysis.verification?.status === "VERIFIED" || Boolean(analysis.verification?.passed);
-  const energyRed = analysis.energy?.reductionPercent ?? analysis.verification?.energyReductionPercent ?? 0;
-  const carbonRed = analysis.carbon?.reductionPercent ?? analysis.verification?.carbonReductionPercent ?? 0;
-  const timeRed = analysis.runtimeMetrics?.executionTimeMs?.reductionPercent ?? analysis.verification?.runtimeReductionPercent ?? 0;
-  const cpuRed = analysis.runtimeMetrics?.cpuUsagePercent?.reductionPercent ?? analysis.verification?.cpuReductionPercent ?? 0;
-  const memRed = analysis.runtimeMetrics?.memoryMb?.reductionPercent ?? analysis.verification?.memoryReductionPercent ?? 0;
-
-  const energyBefore = analysis.energy?.original?.energyWh ?? 0;
-  const energyAfter = analysis.energy?.optimized?.energyWh ?? 0;
-  const energySavings = analysis.energy?.savingsWh ?? Number(Math.max(0, energyBefore - energyAfter).toFixed(6));
-
-  const carbonBefore = analysis.carbon?.original?.carbonEmissionsGrams ?? 0;
-  const carbonAfter = analysis.carbon?.optimized?.carbonEmissionsGrams ?? 0;
-  const carbonSavings = analysis.carbon?.savingsGrams ?? Number(Math.max(0, carbonBefore - carbonAfter).toFixed(6));
-
-  const timeBefore = analysis.runtimeMetrics?.executionTimeMs?.original ?? analysis.benchmarks?.original?.executionTimeMs ?? 0;
-  const timeAfter = analysis.runtimeMetrics?.executionTimeMs?.optimized ?? analysis.benchmarks?.optimized?.executionTimeMs ?? 0;
-
-  const cpuBefore = analysis.runtimeMetrics?.cpuUsagePercent?.original ?? analysis.benchmarks?.original?.cpuUsagePercent ?? 0;
-  const cpuAfter = analysis.runtimeMetrics?.cpuUsagePercent?.optimized ?? analysis.benchmarks?.optimized?.cpuUsagePercent ?? 0;
-
-  const memBefore = analysis.runtimeMetrics?.memoryMb?.original ?? analysis.benchmarks?.original?.memoryMb ?? 0;
-  const memAfter = analysis.runtimeMetrics?.memoryMb?.optimized ?? analysis.benchmarks?.optimized?.memoryMb ?? 0;
+  const isVerified =
+    analysis.verification?.status === "VERIFIED" || Boolean(analysis.verification?.passed);
+  const energyRed =
+    analysis.energy?.reductionPercent ?? analysis.verification?.energyReductionPercent ?? 0;
 
   return (
     <div className="page result-page-container">
@@ -127,7 +110,9 @@ export default function AnalysisResult() {
       <div className="result-header-card">
         <div className="result-header-meta">
           <div className="meta-badges-row">
-            <span className={`status-pill ${analysis.status === "COMPLETED" ? "status-completed" : "status-pending"}`}>
+            <span
+              className={`status-pill ${analysis.status === "COMPLETED" ? "status-completed" : "status-pending"}`}
+            >
               <CheckCircle2 size={14} /> {analysis.status || "COMPLETED"}
             </span>
             <span className="lang-pill">
@@ -171,7 +156,8 @@ export default function AnalysisResult() {
             <span className="score-denom">/ 100</span>
             {improvement > 0 && (
               <span className="improvement-pill">
-                <ArrowDownRight size={14} className="rotate-180" /> +{improvement} pts verified boost
+                <ArrowDownRight size={14} className="rotate-180" /> +{improvement} pts verified
+                boost
               </span>
             )}
           </div>
@@ -188,7 +174,10 @@ export default function AnalysisResult() {
                 <span className="dimension-val">{breakdown.energyEfficiency}%</span>
               </div>
               <div className="bar-track">
-                <div className="bar-fill bg-emerald" style={{ width: `${breakdown.energyEfficiency}%` }}></div>
+                <div
+                  className="bar-fill bg-emerald"
+                  style={{ width: `${breakdown.energyEfficiency}%` }}
+                ></div>
               </div>
             </div>
 
@@ -198,7 +187,10 @@ export default function AnalysisResult() {
                 <span className="dimension-val">{breakdown.computeEfficiency}%</span>
               </div>
               <div className="bar-track">
-                <div className="bar-fill bg-teal" style={{ width: `${breakdown.computeEfficiency}%` }}></div>
+                <div
+                  className="bar-fill bg-teal"
+                  style={{ width: `${breakdown.computeEfficiency}%` }}
+                ></div>
               </div>
             </div>
 
@@ -208,7 +200,10 @@ export default function AnalysisResult() {
                 <span className="dimension-val">{breakdown.memoryEfficiency}%</span>
               </div>
               <div className="bar-track">
-                <div className="bar-fill bg-cyan" style={{ width: `${breakdown.memoryEfficiency}%` }}></div>
+                <div
+                  className="bar-fill bg-cyan"
+                  style={{ width: `${breakdown.memoryEfficiency}%` }}
+                ></div>
               </div>
             </div>
 
@@ -218,7 +213,10 @@ export default function AnalysisResult() {
                 <span className="dimension-val">{breakdown.codeQuality}%</span>
               </div>
               <div className="bar-track">
-                <div className="bar-fill bg-indigo" style={{ width: `${breakdown.codeQuality}%` }}></div>
+                <div
+                  className="bar-fill bg-indigo"
+                  style={{ width: `${breakdown.codeQuality}%` }}
+                ></div>
               </div>
             </div>
           </div>
@@ -227,8 +225,14 @@ export default function AnalysisResult() {
         {/* Card 2: Verification Engine Status & Checklist */}
         <div className="card verification-hero-card">
           <div className="verification-hero-header">
-            <div className={`verification-badge-icon ${isVerified ? "verified-pass" : "verified-fail"}`}>
-              {isVerified ? <ShieldCheck size={26} color="#10b981" /> : <ShieldAlert size={26} color="#f43f5e" />}
+            <div
+              className={`verification-badge-icon ${isVerified ? "verified-pass" : "verified-fail"}`}
+            >
+              {isVerified ? (
+                <ShieldCheck size={26} color="#10b981" />
+              ) : (
+                <ShieldAlert size={26} color="#f43f5e" />
+              )}
             </div>
             <div>
               <span className="card-label">Verification Engine</span>
@@ -250,8 +254,14 @@ export default function AnalysisResult() {
             <h4 className="checklist-title">Verification Rule Checklist</h4>
             {analysis.verification?.checks && analysis.verification.checks.length > 0 ? (
               analysis.verification.checks.map((chk, idx) => (
-                <div key={chk.id || idx} className={`check-item ${chk.passed ? "check-pass" : "check-fail"}`}>
-                  <CheckCircle2 size={16} className={chk.passed ? "text-emerald-400" : "text-rose-400"} />
+                <div
+                  key={chk.id || idx}
+                  className={`check-item ${chk.passed ? "check-pass" : "check-fail"}`}
+                >
+                  <CheckCircle2
+                    size={16}
+                    className={chk.passed ? "text-emerald-400" : "text-rose-400"}
+                  />
                   <div className="check-text-group">
                     <span className="check-name">{chk.name}</span>
                     <span className="check-desc">{chk.description}</span>
@@ -263,7 +273,9 @@ export default function AnalysisResult() {
                 <CheckCircle2 size={16} className="text-emerald-400" />
                 <div className="check-text-group">
                   <span className="check-name">Physical Telemetry Measured</span>
-                  <span className="check-desc">Workload completed with verified energy reduction.</span>
+                  <span className="check-desc">
+                    Workload completed with verified energy reduction.
+                  </span>
                 </div>
               </div>
             )}
@@ -273,130 +285,17 @@ export default function AnalysisResult() {
 
       {/* Comparative Metrics Row (Before vs After) */}
       <h3 className="section-heading">
-        <Zap size={20} className="text-amber-400" /> Physical Telemetry & Carbon Measurements (Before vs After)
+        <Zap size={20} className="text-amber-400" /> Physical Telemetry & Carbon Measurements
+        (Before vs After)
       </h3>
 
-      <div className="metrics-comparison-grid">
-        {/* Metric 1: Energy */}
-        <div className="metric-box">
-          <div className="metric-box-header">
-            <Flame size={18} className="text-amber-400" />
-            <span>Energy Consumption</span>
-            <span className="reduction-badge text-emerald-400">-{energyRed}%</span>
-          </div>
-          <div className="metric-values-row">
-            <div className="val-col">
-              <span className="val-label">Before</span>
-              <span className="val-num">{energyBefore} Wh</span>
-            </div>
-            <div className="val-arrow">&rarr;</div>
-            <div className="val-col">
-              <span className="val-label">After (Optimized)</span>
-              <span className="val-num val-highlight text-emerald-400">
-                {energyAfter} Wh
-              </span>
-            </div>
-          </div>
-          <div className="metric-savings-note">
-            Saved {energySavings} Wh per workload execution
-          </div>
-        </div>
-
-        {/* Metric 2: Carbon CO2e */}
-        <div className="metric-box">
-          <div className="metric-box-header">
-            <Globe size={18} className="text-teal-400" />
-            <span>Operational CO₂e</span>
-            <span className="reduction-badge text-emerald-400">-{carbonRed}%</span>
-          </div>
-          <div className="metric-values-row">
-            <div className="val-col">
-              <span className="val-label">Before</span>
-              <span className="val-num">{carbonBefore} g</span>
-            </div>
-            <div className="val-arrow">&rarr;</div>
-            <div className="val-col">
-              <span className="val-label">After (Optimized)</span>
-              <span className="val-num val-highlight text-teal-400">
-                {carbonAfter} g
-              </span>
-            </div>
-          </div>
-          <div className="metric-savings-note">
-            Reduced {carbonSavings} g CO₂e ({analysis.carbon?.region || "global"} grid)
-          </div>
-        </div>
-
-        {/* Metric 3: Execution Runtime */}
-        <div className="metric-box">
-          <div className="metric-box-header">
-            <Clock size={18} className="text-blue-400" />
-            <span>Execution Runtime</span>
-            <span className="reduction-badge text-emerald-400">-{timeRed}%</span>
-          </div>
-          <div className="metric-values-row">
-            <div className="val-col">
-              <span className="val-label">Before</span>
-              <span className="val-num">{timeBefore} ms</span>
-            </div>
-            <div className="val-arrow">&rarr;</div>
-            <div className="val-col">
-              <span className="val-label">After (Optimized)</span>
-              <span className="val-num val-highlight text-blue-400">
-                {timeAfter} ms
-              </span>
-            </div>
-          </div>
-          <div className="metric-savings-note">
-            {timeRed}% faster latency execution
-          </div>
-        </div>
-
-        {/* Metric 4: CPU Usage */}
-        <div className="metric-box">
-          <div className="metric-box-header">
-            <Cpu size={18} className="text-purple-400" />
-            <span>CPU Saturation</span>
-            <span className="reduction-badge text-emerald-400">-{cpuRed}%</span>
-          </div>
-          <div className="metric-values-row">
-            <div className="val-col">
-              <span className="val-label">Before</span>
-              <span className="val-num">{cpuBefore}%</span>
-            </div>
-            <div className="val-arrow">&rarr;</div>
-            <div className="val-col">
-              <span className="val-label">After (Optimized)</span>
-              <span className="val-num val-highlight text-purple-400">
-                {cpuAfter}%
-              </span>
-            </div>
-          </div>
-          <div className="metric-savings-note">Lower dynamic core power draw</div>
-        </div>
-
-        {/* Metric 5: Memory Usage */}
-        <div className="metric-box">
-          <div className="metric-box-header">
-            <HardDrive size={18} className="text-cyan-400" />
-            <span>Memory Footprint</span>
-            <span className="reduction-badge text-emerald-400">-{memRed}%</span>
-          </div>
-          <div className="metric-values-row">
-            <div className="val-col">
-              <span className="val-label">Before</span>
-              <span className="val-num">{memBefore} MB</span>
-            </div>
-            <div className="val-arrow">&rarr;</div>
-            <div className="val-col">
-              <span className="val-label">After (Optimized)</span>
-              <span className="val-num val-highlight text-cyan-400">
-                {memAfter} MB
-              </span>
-            </div>
-          </div>
-          <div className="metric-savings-note">Optimized RAM allocation</div>
-        </div>
+      <div className="mb-6">
+        <BeforeAfterMetricsMatrix
+          analysis={analysis}
+          showVerificationBadge={false}
+          showTable={true}
+          showCharts={true}
+        />
       </div>
 
       {/* AI Explanation & Architecture Refactoring Card */}
@@ -422,7 +321,9 @@ export default function AnalysisResult() {
             </div>
 
             <div className="ai-section-box">
-              <h4 className="ai-section-title text-amber-300">Why It Matters (Energy & CO₂e Impact)</h4>
+              <h4 className="ai-section-title text-amber-300">
+                Why It Matters (Energy & CO₂e Impact)
+              </h4>
               <p className="ai-section-body">{analysis.aiExplanation.whyItMatters}</p>
             </div>
 
@@ -434,9 +335,15 @@ export default function AnalysisResult() {
 
           <div className="ai-expected-impact-row">
             <span className="impact-label">Expected Qualitative Resource Impact:</span>
-            <span className="impact-pill">CPU: {analysis.aiExplanation.expectedImpact?.cpu || "lower"}</span>
-            <span className="impact-pill">Runtime: {analysis.aiExplanation.expectedImpact?.runtime || "lower"}</span>
-            <span className="impact-pill">Memory: {analysis.aiExplanation.expectedImpact?.memory || "similar"}</span>
+            <span className="impact-pill">
+              CPU: {analysis.aiExplanation.expectedImpact?.cpu || "lower"}
+            </span>
+            <span className="impact-pill">
+              Runtime: {analysis.aiExplanation.expectedImpact?.runtime || "lower"}
+            </span>
+            <span className="impact-pill">
+              Memory: {analysis.aiExplanation.expectedImpact?.memory || "similar"}
+            </span>
           </div>
         </div>
       )}
@@ -514,7 +421,11 @@ export default function AnalysisResult() {
             <Editor
               height="360px"
               language={analysis.language || "python"}
-              value={activeCodeTab === "original" ? analysis.originalCode : (analysis.optimizedCode || analysis.originalCode)}
+              value={
+                activeCodeTab === "original"
+                  ? analysis.originalCode
+                  : analysis.optimizedCode || analysis.originalCode
+              }
               theme="vs-dark"
               options={{
                 readOnly: true,
@@ -532,9 +443,7 @@ export default function AnalysisResult() {
         <div className="findings-card-header">
           <div className="flex items-center gap-2">
             <Activity size={20} className="text-amber-400" />
-            <h3 className="card-title">
-              Static Code Findings ({analysis.findings?.length || 0})
-            </h3>
+            <h3 className="card-title">Static Code Findings ({analysis.findings?.length || 0})</h3>
           </div>
           <span className="findings-badge">
             {analysis.findings?.filter((f) => f.severity === "HIGH").length || 0} Critical Hotspots
@@ -544,13 +453,22 @@ export default function AnalysisResult() {
         {analysis.findings && analysis.findings.length > 0 ? (
           <div className="findings-list">
             {analysis.findings.map((f, idx) => (
-              <div key={idx} className={`finding-card finding-${(f.severity || "medium").toLowerCase()}`}>
+              <div
+                key={idx}
+                className={`finding-card finding-${(f.severity || "medium").toLowerCase()}`}
+              >
                 <div className="finding-top-row">
-                  <span className={`severity-tag severity-${(f.severity || "medium").toLowerCase()}`}>
+                  <span
+                    className={`severity-tag severity-${(f.severity || "medium").toLowerCase()}`}
+                  >
                     {f.severity}
                   </span>
-                  <span className="finding-category">{f.category?.replace(/_/g, " ") || "Hotspot"}</span>
-                  <span className="finding-line">Line {f.line} &bull; {f.file || analysis.fileName}</span>
+                  <span className="finding-category">
+                    {f.category?.replace(/_/g, " ") || "Hotspot"}
+                  </span>
+                  <span className="finding-line">
+                    Line {f.line} &bull; {f.file || analysis.fileName}
+                  </span>
                 </div>
                 <p className="finding-desc">{f.description}</p>
                 {f.recommendation && (
@@ -564,7 +482,9 @@ export default function AnalysisResult() {
         ) : (
           <div className="clean-code-state">
             <CheckCircle2 size={32} className="text-emerald-400" />
-            <p>No critical sustainability or performance hotspots detected by the static analyzer.</p>
+            <p>
+              No critical sustainability or performance hotspots detected by the static analyzer.
+            </p>
           </div>
         )}
       </div>

@@ -1,21 +1,51 @@
 /**
- * GreenOps AI - Frontend API Service
+ * GreenOps AI - Frontend API Service (Phase 12 Integration)
  * 
- * Connects frontend views with backend Phase 11 APIs:
- * - Code Analysis Submission (POST /api/analyses)
- * - Async Polling & Live Progress Tracking (GET /api/analyses/:analysisId)
- * - Recent Analyses History (GET /api/analyses)
- * - Verification & Benchmark telemetry
+ * Connects frontend views with real Phase 11 backend APIs:
+ * - Code Analysis Submission: POST /api/analyses
+ * - Async Polling & Live Progress Tracking: GET /api/analyses/:analysisId
+ * - Recent Analyses History: GET /api/analyses
+ * 
+ * Core Principle: AI proposes. Measurement verifies.
  */
+
+export type AnalysisJobStatus = "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+export type PipelineStage =
+  | "INITIALIZING"
+  | "STATIC_ANALYSIS"
+  | "ORIGINAL_BENCHMARK"
+  | "ORIGINAL_ENERGY"
+  | "ORIGINAL_CARBON"
+  | "AI_OPTIMIZATION"
+  | "OPTIMIZED_BENCHMARK"
+  | "OPTIMIZED_ENERGY"
+  | "OPTIMIZED_CARBON"
+  | "VERIFICATION"
+  | "GREEN_SCORE"
+  | "FINALIZING"
+  | "COMPLETED"
+  | "FAILED";
+
+export type GreenGrade = "A+" | "A" | "B" | "C" | "D" | "F";
+export type VerificationStatus = "VERIFIED" | "REJECTED" | "INCONCLUSIVE" | "PENDING";
 
 export interface AnalysisFinding {
   id?: number | string;
-  category: string;
-  severity: "HIGH" | "MEDIUM" | "LOW" | string;
   file: string;
   line: number;
+  column?: number;
+  endLine?: number;
+  endColumn?: number;
+  severity: "HIGH" | "MEDIUM" | "LOW" | string;
+  category: string;
+  ruleId?: string;
+  message?: string;
   description: string;
-  recommendation: string;
+  recommendation?: string;
+  fixSnippet?: string;
+  estimatedEnergyImpact?: string;
+  explanation?: string;
   type?: string;
   title?: string;
 }
@@ -25,6 +55,7 @@ export interface MetricComparison {
   optimized: number;
   reductionPercent: number;
   unit: string;
+  delta?: number;
 }
 
 export interface AiExplanation {
@@ -78,7 +109,9 @@ export interface VerificationCheck {
 
 export interface VerificationResult {
   verificationId: string;
-  status: "VERIFIED" | "REJECTED" | "INCONCLUSIVE" | "PENDING";
+  optimizationId?: string;
+  analysisId?: string;
+  status: VerificationStatus;
   passed: boolean;
   summary: string;
   energyReductionPercent: number;
@@ -86,6 +119,13 @@ export interface VerificationResult {
   runtimeReductionPercent: number;
   cpuReductionPercent: number;
   memoryReductionPercent: number;
+  metrics?: {
+    executionTimeMs?: MetricComparison;
+    cpuUsagePercent?: MetricComparison;
+    memoryMb?: MetricComparison;
+    energyWh?: MetricComparison;
+    carbonGrams?: MetricComparison;
+  };
   checks: VerificationCheck[];
   verifiedBy?: string;
   verifiedAt?: string;
@@ -103,9 +143,10 @@ export interface GreenScoreResult {
   originalScore: number;
   optimizedScore: number;
   improvement: number;
-  grade: "A+" | "A" | "B" | "C" | "D" | "F";
+  grade: GreenGrade;
   breakdown: GreenScoreBreakdown;
   summary: string;
+  calculatedAt?: string;
 }
 
 export interface SingleRunResult {
@@ -115,14 +156,17 @@ export interface SingleRunResult {
   cpuUsagePercent: number;
   memoryMb: number;
   exitCode: number;
+  stdout?: string;
+  stderr?: string;
 }
 
 export interface BenchmarkResult {
   benchmarkId: string;
+  analysisId?: string;
   status: "COMPLETED" | "FAILED";
   language: string;
   fileName: string;
-  codeVersion: string;
+  codeVersion: "BASE" | "OPTIMIZED" | string;
   executionTimeMs: number;
   cpuUsagePercent: number;
   memoryMb: number;
@@ -133,6 +177,25 @@ export interface BenchmarkResult {
   };
   warmupRuns: number;
   measuredRuns: number;
+  runs?: SingleRunResult[];
+  error?: string;
+  createdAt?: string;
+}
+
+export interface EnergySummary {
+  original: EnergyResult;
+  optimized: EnergyResult;
+  reductionPercent: number;
+  savingsWh: number;
+  savingsJoules: number;
+}
+
+export interface CarbonSummary {
+  original: CarbonResult;
+  optimized: CarbonResult;
+  reductionPercent: number;
+  savingsGrams: number;
+  region: string;
 }
 
 export interface AnalysisSummary {
@@ -143,24 +206,24 @@ export interface AnalysisSummary {
   energyReductionPercent: number;
   carbonReductionPercent: number;
   runtimeReductionPercent: number;
-  verificationStatus: string;
+  verificationStatus: VerificationStatus;
   greenScore: number;
-  grade: string;
+  grade: GreenGrade;
 }
 
 export interface FullAnalysisJob {
   analysisId: string;
-  id: string; // compatibility alias
+  id?: string; // compatibility alias
   projectId?: string | null;
-  status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
-  stage: string;
+  status: AnalysisJobStatus;
+  stage: PipelineStage;
   stageProgress: number; // 0-100%
   language: string;
   fileName: string;
   originalCode: string;
   optimizedCode?: string;
 
-  findings: AnalysisFinding[];
+  findings?: AnalysisFinding[];
   aiExplanation?: AiExplanation;
   benchmarks?: {
     original: BenchmarkResult;
@@ -171,91 +234,169 @@ export interface FullAnalysisJob {
     cpuUsagePercent: MetricComparison;
     memoryMb: MetricComparison;
   };
-  energy?: {
-    original: EnergyResult;
-    optimized: EnergyResult;
-    reductionPercent: number;
-    savingsWh: number;
-    savingsJoules: number;
-  };
-  carbon?: {
-    original: CarbonResult;
-    optimized: CarbonResult;
-    reductionPercent: number;
-    savingsGrams: number;
-    region: string;
-  };
+  energy?: EnergySummary;
+  carbon?: CarbonSummary;
   verification?: VerificationResult;
   greenScore?: GreenScoreResult;
   summary?: AnalysisSummary;
 
-  score: number; // top-level score alias
+  score?: number; // compatibility alias
   error?: string;
-  failedStage?: string;
+  failedStage?: PipelineStage;
   createdAt: string;
   completedAt?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+export interface CreateAnalysisOptions {
+  code: string;
+  language?: string;
+  fileName?: string;
+  projectId?: string;
+  region?: string;
+  customPowerModel?: Record<string, unknown>;
+  warmupRuns?: number;
+  measuredRuns?: number;
+  timeoutMs?: number;
+}
+
+export interface CreateAnalysisResponse {
+  analysisId: string;
+  id: string;
+  status: AnalysisJobStatus;
+  stage: PipelineStage;
+  stageProgress: number;
+  language: string;
+  fileName: string;
+  createdAt: string;
+  message?: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 /**
- * Creates and starts a new analysis pipeline job
+ * Creates and starts a new analysis pipeline job (POST /api/analyses)
  */
 export const createAnalysisJob = async (
-  code: string,
+  options: CreateAnalysisOptions | string,
   language: string = "python",
   fileName: string = "service.py"
-): Promise<{ analysisId: string; status: string; stage: string; stageProgress: number }> => {
-  const res = await fetch(`${API_BASE_URL}/api/analyses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, language, fileName }),
-  });
+): Promise<CreateAnalysisResponse> => {
+  const payload: CreateAnalysisOptions =
+    typeof options === "string"
+      ? { code: options, language, fileName }
+      : options;
+
+  if (!payload.code || typeof payload.code !== "string" || payload.code.trim() === "") {
+    throw new Error("Source code is required and cannot be empty.");
+  }
+
+  const endpoint = API_BASE_URL ? `${API_BASE_URL}/api/analyses` : `/api/analyses`;
+
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (networkErr) {
+    throw new Error(
+      `Unable to connect to the GreenOps analysis backend service. (${(networkErr as Error).message})`
+    );
+  }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || `Analysis request failed: ${res.statusText}`);
+    throw new Error(
+      errorData.error ||
+      errorData.message ||
+      `Analysis submission failed with HTTP status ${res.status}: ${res.statusText}`
+    );
   }
 
   return await res.json();
 };
 
 /**
- * Polls the analysis endpoint until the job finishes or fails
+ * Polls the analysis endpoint (GET /api/analyses/:analysisId) until the job finishes or fails
  */
 export const pollAnalysisJob = async (
   analysisId: string,
   onProgress?: (job: FullAnalysisJob) => void,
-  maxAttempts: number = 60,
-  intervalMs: number = 800
+  options: {
+    maxAttempts?: number;
+    intervalMs?: number;
+    signal?: AbortSignal;
+  } = {}
 ): Promise<FullAnalysisJob> => {
+  const { maxAttempts = 75, intervalMs = 800, signal } = options;
+  const endpoint = API_BASE_URL
+    ? `${API_BASE_URL}/api/analyses/${analysisId}`
+    : `/api/analyses/${analysisId}`;
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (signal?.aborted) {
+      throw new Error("Analysis polling was cancelled.");
+    }
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`);
+      const res = await fetch(endpoint, { signal });
+
+      if (res.status === 404) {
+        throw new Error(`Analysis job with ID "${analysisId}" was not found.`);
+      }
+
       if (res.ok) {
         const job: FullAnalysisJob = await res.json();
-        if (onProgress) onProgress(job);
+        if (onProgress) {
+          onProgress(job);
+        }
 
         if (job.status === "COMPLETED") {
-          localStorage.setItem("greenops-analysis", JSON.stringify(job));
+          try {
+            localStorage.setItem("greenops-latest-analysis-id", job.analysisId);
+            localStorage.setItem("greenops-analysis", JSON.stringify(job));
+          } catch {
+            // Ignore localStorage errors
+          }
           return job;
         }
 
         if (job.status === "FAILED") {
-          throw new Error(job.error || "Analysis pipeline failed during execution.");
+          const stageInfo = job.failedStage ? ` (at stage: ${job.failedStage})` : "";
+          throw new Error(job.error || `Analysis pipeline failed${stageInfo}.`);
         }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.warn(`[Polling attempt ${attempt + 1}] Unexpected status ${res.status}:`, errData);
       }
     } catch (err) {
-      if ((err as Error).message.includes("Analysis pipeline failed")) {
+      if (signal?.aborted) {
+        throw new Error("Analysis polling was cancelled.");
+      }
+      if ((err as Error).message.includes("Analysis pipeline failed") ||
+          (err as Error).message.includes("was not found")) {
         throw err;
       }
-      console.warn(`[Polling attempt ${attempt + 1}] Check failed, retrying...`, err);
+      console.warn(`[Polling attempt ${attempt + 1}] Transient error, retrying:`, (err as Error).message);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, intervalMs);
+      if (signal) {
+        signal.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(timeout);
+            reject(new Error("Analysis polling was cancelled."));
+          },
+          { once: true }
+        );
+      }
+    });
   }
 
-  throw new Error("Analysis job timed out. The server is still processing or unavailable.");
+  throw new Error("Analysis job timed out. The backend server is still processing or has stopped.");
 };
 
 /**
@@ -265,23 +406,37 @@ export const analyzeCode = async (
   code: string,
   language: string = "python",
   fileName: string = "service.py",
-  onProgress?: (job: FullAnalysisJob) => void
+  onProgress?: (job: FullAnalysisJob) => void,
+  signal?: AbortSignal
 ): Promise<FullAnalysisJob> => {
-  const job = await createAnalysisJob(code, language, fileName);
-  return await pollAnalysisJob(job.analysisId, onProgress);
+  const created = await createAnalysisJob({ code, language, fileName });
+  return await pollAnalysisJob(created.analysisId, onProgress, { signal });
 };
 
 /**
- * Retrieves a single analysis by ID (checking API first, then localStorage fallback)
+ * Retrieves a single analysis by ID (GET /api/analyses/:analysisId with localStorage fallback)
  */
 export const getAnalysis = async (analysisId?: string): Promise<FullAnalysisJob | null> => {
-  // If specific analysisId provided, fetch from backend
-  if (analysisId && analysisId !== "latest") {
+  const targetId =
+    analysisId && analysisId !== "latest"
+      ? analysisId
+      : (typeof window !== "undefined" ? localStorage.getItem("greenops-latest-analysis-id") : null);
+
+  // 1. Fetch specific ID if available
+  if (targetId) {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/analyses/${analysisId}`);
+      const endpoint = API_BASE_URL
+        ? `${API_BASE_URL}/api/analyses/${targetId}`
+        : `/api/analyses/${targetId}`;
+      const res = await fetch(endpoint);
       if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem("greenops-analysis", JSON.stringify(data));
+        const data: FullAnalysisJob = await res.json();
+        try {
+          localStorage.setItem("greenops-analysis", JSON.stringify(data));
+          localStorage.setItem("greenops-latest-analysis-id", data.analysisId);
+        } catch {
+          // Ignore
+        }
         return data;
       }
     } catch (err) {
@@ -289,7 +444,28 @@ export const getAnalysis = async (analysisId?: string): Promise<FullAnalysisJob 
     }
   }
 
-  // Fallback to localStorage
+  // 2. Fetch latest recent analysis from API
+  try {
+    const endpoint = API_BASE_URL ? `${API_BASE_URL}/api/analyses` : `/api/analyses`;
+    const res = await fetch(endpoint);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.analyses && data.analyses.length > 0) {
+        const latest = data.analyses[0] as FullAnalysisJob;
+        try {
+          localStorage.setItem("greenops-analysis", JSON.stringify(latest));
+          localStorage.setItem("greenops-latest-analysis-id", latest.analysisId);
+        } catch {
+          // Ignore
+        }
+        return latest;
+      }
+    }
+  } catch (err) {
+    console.warn("[GreenOps API] Failed to fetch recent analyses:", err);
+  }
+
+  // 3. Fallback to localStorage
   try {
     const saved = localStorage.getItem("greenops-analysis");
     if (saved) {
@@ -299,36 +475,22 @@ export const getAnalysis = async (analysisId?: string): Promise<FullAnalysisJob 
     // Ignore localStorage parse error
   }
 
-  // Fallback: Fetch latest recent analysis from API
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/analyses`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.analyses && data.analyses.length > 0) {
-        const latest = data.analyses[0];
-        localStorage.setItem("greenops-analysis", JSON.stringify(latest));
-        return latest;
-      }
-    }
-  } catch {
-    // Ignore
-  }
-
   return null;
 };
 
 /**
- * Retrieves recent analyses
+ * Retrieves recent analyses (GET /api/analyses)
  */
 export const getRecentAnalyses = async (limit: number = 10): Promise<FullAnalysisJob[]> => {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/analyses`);
+    const endpoint = API_BASE_URL ? `${API_BASE_URL}/api/analyses` : `/api/analyses`;
+    const res = await fetch(endpoint);
     if (res.ok) {
       const data = await res.json();
       return (data.analyses || []).slice(0, limit);
     }
   } catch (err) {
-    console.warn("[GreenOps API] Failed to fetch recent analyses:", err);
+    console.warn("[GreenOps API] Failed to fetch recent analyses list:", err);
   }
   return [];
 };

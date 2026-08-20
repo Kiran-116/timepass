@@ -104,12 +104,12 @@ router.get("/:analysisId", (req: Request, res: Response) => {
     return;
   }
 
-  // Ensure compatibility fields (e.g. id, score, energy, co2e) for older frontend callers
+  // Ensure compatibility aliases (e.g. id, score, co2e) without overwriting job.energy object
   const responsePayload = {
     ...job,
     id: job.analysisId,
     score: job.greenScore?.score ?? 0,
-    energy: job.energy?.original?.energyWh ?? 0,
+    energyWh: job.energy?.original?.energyWh ?? 0,
     co2e: job.carbon?.original?.carbonEmissionsGrams ?? 0,
   };
 

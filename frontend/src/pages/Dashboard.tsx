@@ -4,15 +4,14 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   FileCode,
   Flame,
   GitPullRequest,
   Globe,
   Leaf,
+  Loader2,
   Play,
   ShieldCheck,
-  Zap,
 } from "lucide-react";
 import { FullAnalysisJob, getAnalysis, getRecentAnalyses } from "../services/api";
 
@@ -38,12 +37,24 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="page center-container">
+        <div className="loading-card">
+          <Loader2 className="animate-spin text-emerald-400" size={36} />
+          <h2>Loading Dashboard...</h2>
+          <p className="text-muted">Fetching platform sustainability telemetry.</p>
+        </div>
+      </div>
+    );
+  }
+
   const greenScore = latestAnalysis?.greenScore?.score ?? latestAnalysis?.score ?? 86;
   const grade = latestAnalysis?.greenScore?.grade ?? "A";
   const energyWh = latestAnalysis?.energy?.optimized?.energyWh ?? latestAnalysis?.energy?.original?.energyWh ?? 0.02;
   const carbonGrams = latestAnalysis?.carbon?.optimized?.carbonEmissionsGrams ?? latestAnalysis?.carbon?.original?.carbonEmissionsGrams ?? 0.014;
   const energySavedWh = latestAnalysis?.energy?.savingsWh ?? 0.041;
-  const totalAnalysesCount = Math.max(recentAnalyses.length, latestAnalysis ? 1 : 0, 3);
+  const totalAnalysesCount = Math.max(recentAnalyses.length, latestAnalysis ? 1 : 0);
 
   return (
     <div className="page dashboard-page-container">
@@ -56,7 +67,7 @@ export default function Dashboard() {
           </div>
           <h1 className="hero-title">Continuous Environmental Telemetry & AI Refactoring</h1>
           <p className="hero-description">
-            Measure physical compute consumption, uncover quadratic hotspots, and verify energy & carbon reductions through physical benchmark measurements.
+            Measure physical compute consumption, uncover quadratic hotspots, and verify energy & carbon reductions through sandbox benchmark measurements.
           </p>
           <div className="hero-actions">
             <button className="btn-primary" onClick={() => navigate("/code-analysis")}>
@@ -90,7 +101,9 @@ export default function Dashboard() {
             <span className="kpi-unit">/ 100</span>
           </div>
           <span className="kpi-subtext text-emerald-300">
-            {latestAnalysis?.greenScore?.improvement ? `+${latestAnalysis.greenScore.improvement} pts verified boost` : "Optimal efficiency"}
+            {latestAnalysis?.greenScore?.improvement
+              ? `+${latestAnalysis.greenScore.improvement} pts verified boost`
+              : "Optimal efficiency"}
           </span>
         </div>
 
@@ -120,7 +133,9 @@ export default function Dashboard() {
             <span className="kpi-unit">g / run</span>
           </div>
           <span className="kpi-subtext text-teal-300">
-            67.2% measured carbon reduction
+            {latestAnalysis?.carbon?.reductionPercent
+              ? `${latestAnalysis.carbon.reductionPercent}% measured carbon reduction`
+              : "Verified low carbon footprint"}
           </span>
         </div>
 
@@ -159,7 +174,7 @@ export default function Dashboard() {
               recentAnalyses.map((job, idx) => (
                 <div
                   key={job.analysisId || idx}
-                  className="recent-analysis-row"
+                  className="recent-analysis-row cursor-pointer"
                   onClick={() => navigate(`/analysis-result?id=${job.analysisId}`)}
                 >
                   <div className="row-left">
@@ -170,10 +185,14 @@ export default function Dashboard() {
                   <div className="row-right">
                     <div className="row-score">
                       <Leaf size={14} className="text-emerald-400" />
-                      <span>{job.greenScore?.score || job.score || 80}/100</span>
+                      <span>{job.greenScore?.score ?? job.score ?? 80}/100</span>
                     </div>
-                    <span className={`pill-verification ${job.verification?.status === "VERIFIED" ? "verified" : ""}`}>
-                      {job.verification?.status || "COMPLETED"}
+                    <span
+                      className={`pill-verification ${
+                        job.verification?.status === "VERIFIED" ? "verified" : ""
+                      }`}
+                    >
+                      {job.verification?.status || job.status || "COMPLETED"}
                     </span>
                     <ArrowRight size={14} className="text-muted" />
                   </div>
@@ -195,7 +214,7 @@ export default function Dashboard() {
           <div className="section-card-header">
             <div className="flex items-center gap-2">
               <GitPullRequest size={20} className="text-purple-400" />
-              <h3 className="section-title">Connected GitHub PRs (Phase 14)</h3>
+              <h3 className="section-title">Connected GitHub PRs (Phase 14 Preview)</h3>
             </div>
             <span className="badge-pr-status">3 Monitored</span>
           </div>

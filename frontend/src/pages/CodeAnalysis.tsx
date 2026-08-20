@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import {
   Activity,
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
   Cpu,
+  FileCode,
   Flame,
-  Globe,
   Leaf,
   Loader2,
   Play,
@@ -15,12 +16,20 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { analyzeCode, FullAnalysisJob } from "../services/api";
+import {
+  analyzeCode,
+  FullAnalysisJob,
+  PipelineStage,
+} from "../services/api";
 
-const CODE_TEMPLATES: Record<string, { label: string; lang: string; code: string }> = {
+const CODE_TEMPLATES: Record<
+  string,
+  { label: string; lang: string; fileName: string; code: string }
+> = {
   nested_loop: {
     label: "O(n²) Nested Loop (Quadratic Compute)",
     lang: "python",
+    fileName: "service.py",
     code: `def find_common_elements(list_a, list_b):
     """Find common elements with inefficient quadratic iteration"""
     matches = []
@@ -30,7 +39,7 @@ const CODE_TEMPLATES: Record<string, { label: string; lang: string; code: string
                 matches.append(item_a)
     return matches
 
-# Test payload
+# Test workload execution
 list_a = [f"id_{i}" for i in range(1000)]
 list_b = [f"id_{i*2}" for i in range(1000)]
 result = find_common_elements(list_a, list_b)
@@ -39,6 +48,7 @@ print(f"Matched {len(result)} items")`,
   n_plus_one: {
     label: "N+1 Database Query Smell",
     lang: "python",
+    fileName: "service.py",
     code: `def fetch_user_profiles(user_ids, db):
     """N+1 Query Inefficiency: Repeated DB query in loop"""
     profiles = []
@@ -46,11 +56,21 @@ print(f"Matched {len(result)} items")`,
         # Executes network & database roundtrip on each iteration
         user = db.query(f"SELECT * FROM users WHERE id = {user_id}")
         profiles.append(user)
-    return profiles`,
+    return profiles
+
+# Simulated database driver
+class MockDB:
+    def query(self, sql):
+        return {"user": sql}
+
+db = MockDB()
+fetch_user_profiles(list(range(200)), db)
+print("Fetched profiles")`,
   },
   repeated_api: {
     label: "Repeated Network API Calls",
     lang: "javascript",
+    fileName: "service.js",
     code: `async function fetchExchangeRates(currencyList, apiClient) {
   // Inefficiency: Repeated sequential API calls inside loop
   const rates = [];
@@ -59,11 +79,15 @@ print(f"Matched {len(result)} items")`,
     rates.push(rate);
   }
   return rates;
-}`,
+}
+
+const apiClient = { get: async (u) => ({ url: u, rate: 1.25 }) };
+fetchExchangeRates(["USD", "EUR", "GBP", "JPY", "CAD"], apiClient).then(r => console.log(r.length));`,
   },
   efficient_linear: {
     label: "Clean Linear Pipeline (O(n))",
     lang: "python",
+    fileName: "service.py",
     code: `def aggregate_metrics(measurements):
     """Efficient single-pass linear aggregation"""
     total = sum(measurements)
@@ -80,9 +104,13 @@ print(stats)`,
   },
 };
 
-const STAGES = [
+const PIPELINE_DISPLAY_STAGES: Array<{
+  id: PipelineStage | string;
+  label: string;
+  icon: typeof Activity;
+}> = [
   { id: "STATIC_ANALYSIS", label: "Static Code Analysis", icon: Activity },
-  { id: "ORIGINAL_BENCHMARK", label: "Runtime Sandbox Telemetry", icon: Cpu },
+  { id: "ORIGINAL_BENCHMARK", label: "Sandbox Telemetry", icon: Cpu },
   { id: "ORIGINAL_ENERGY", label: "Energy & Carbon Engines", icon: Flame },
   { id: "AI_OPTIMIZATION", label: "AI Explainer & Refactoring", icon: Sparkles },
   { id: "VERIFICATION", label: "Verification Engine", icon: ShieldCheck },
@@ -93,42 +121,91 @@ export default function CodeAnalysis() {
   const navigate = useNavigate();
   const [templateKey, setTemplateKey] = useState("nested_loop");
   const [language, setLanguage] = useState(CODE_TEMPLATES.nested_loop.lang);
+  const [fileName, setFileName] = useState(CODE_TEMPLATES.nested_loop.fileName);
   const [code, setCode] = useState(CODE_TEMPLATES.nested_loop.code);
+
   const [loading, setLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState<string>("");
   const [progressPercent, setProgressPercent] = useState(0);
   const [completedJob, setCompletedJob] = useState<FullAnalysisJob | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Clean up any ongoing polling request if the user navigates away
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const handleTemplateChange = (key: string) => {
     setTemplateKey(key);
     const tmpl = CODE_TEMPLATES[key];
     if (tmpl) {
       setLanguage(tmpl.lang);
+      setFileName(tmpl.fileName);
       setCode(tmpl.code);
     }
   };
 
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang);
+    if (lang === "python" && !fileName.endsWith(".py")) {
+      setFileName("service.py");
+    } else if ((lang === "javascript" || lang === "typescript") && !fileName.endsWith(".js") && !fileName.endsWith(".ts")) {
+      setFileName(lang === "typescript" ? "service.ts" : "service.js");
+    }
+  };
+
   const handleAnalyze = async () => {
+    if (!code.trim()) {
+      setErrorMsg("Please enter or select source code to analyze.");
+      return;
+    }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setLoading(true);
     setErrorMsg("");
     setCompletedJob(null);
-    setProgressPercent(10);
-    setCurrentStage("STATIC_ANALYSIS");
+    setProgressPercent(5);
+    setCurrentStage("INITIALIZING");
 
     try {
-      const fileName = language === "python" ? "service.py" : "service.js";
-      const result = await analyzeCode(code, language, fileName, (job) => {
-        if (job.stage) setCurrentStage(job.stage);
-        if (job.stageProgress !== undefined) setProgressPercent(job.stageProgress);
-      });
+      const result = await analyzeCode(
+        code,
+        language,
+        fileName,
+        (job) => {
+          if (job.stage) {
+            setCurrentStage(job.stage);
+          }
+          if (typeof job.stageProgress === "number") {
+            setProgressPercent(Math.max(5, job.stageProgress));
+          }
+        },
+        abortController.signal
+      );
 
       setCompletedJob(result);
       setProgressPercent(100);
       setCurrentStage("COMPLETED");
     } catch (err) {
-      console.error("[CodeAnalysis Error]:", err);
-      setErrorMsg((err as Error).message || "Analysis failed. Please check your network or server status.");
+      if ((err as Error).name === "AbortError" || (err as Error).message.includes("cancelled")) {
+        return;
+      }
+      console.error("[CodeAnalysis] Pipeline submission failed:", err);
+      setErrorMsg(
+        (err as Error).message ||
+          "Analysis workflow failed. Please ensure the backend is running at http://localhost:5000."
+      );
     } finally {
       setLoading(false);
     }
@@ -140,7 +217,7 @@ export default function CodeAnalysis() {
         <div>
           <h1 className="page-title">Code Analysis & Sustainability Profiling</h1>
           <p className="page-subtitle">
-            Submit your source code to run the complete end-to-end GreenOps analysis workflow:
+            Submit your source code to execute the complete real GreenOps AI pipeline:
             Static Hotspots &rarr; Sandbox Telemetry &rarr; Energy & CO₂e &rarr; AI Optimization &rarr; Verification &rarr; Green Score.
           </p>
         </div>
@@ -175,7 +252,7 @@ export default function CodeAnalysis() {
             id="language-select"
             className="input-select"
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => handleLanguageChange(e.target.value)}
             disabled={loading}
           >
             <option value="python">Python</option>
@@ -201,7 +278,7 @@ export default function CodeAnalysis() {
           >
             {loading ? (
               <>
-                <Loader2 className="animate-spin" size={16} /> Analyzing Pipeline...
+                <Loader2 className="animate-spin" size={16} /> Running Pipeline...
               </>
             ) : (
               <>
@@ -218,7 +295,9 @@ export default function CodeAnalysis() {
           <div className="progress-header">
             <div className="progress-title-row">
               <Loader2 className="animate-spin text-emerald-400" size={20} />
-              <span className="font-semibold text-lg">Executing End-to-End Analysis Workflow</span>
+              <span className="font-semibold text-lg">
+                Executing Real Analysis Pipeline: {currentStage.replace(/_/g, " ")}
+              </span>
             </div>
             <span className="progress-badge">{progressPercent}%</span>
           </div>
@@ -226,15 +305,17 @@ export default function CodeAnalysis() {
           <div className="progress-track">
             <div
               className="progress-fill"
-              style={{ width: `${Math.max(8, progressPercent)}%` }}
+              style={{ width: `${Math.min(100, Math.max(5, progressPercent))}%` }}
             ></div>
           </div>
 
           <div className="pipeline-stages-grid">
-            {STAGES.map((s, idx) => {
+            {PIPELINE_DISPLAY_STAGES.map((s, idx) => {
               const StageIcon = s.icon;
               const isCurrent = currentStage === s.id;
-              const isDone = progressPercent >= ((idx + 1) / STAGES.length) * 100 || progressPercent === 100;
+              const isDone =
+                progressPercent >= ((idx + 1) / PIPELINE_DISPLAY_STAGES.length) * 90 ||
+                progressPercent === 100;
               return (
                 <div
                   key={s.id}
@@ -257,17 +338,24 @@ export default function CodeAnalysis() {
             <div className="success-header">
               <div className="badge-green-score">
                 <Leaf size={18} />
-                <span>Green Score: {completedJob.greenScore?.score || completedJob.score}/100</span>
-                <span className="grade-pill">{completedJob.greenScore?.grade || "A"}</span>
+                <span>
+                  Green Score: {completedJob.greenScore?.score ?? completedJob.score ?? 0}/100
+                </span>
+                <span className="grade-pill">{completedJob.greenScore?.grade ?? "A"}</span>
               </div>
-              <div className="badge-verified">
+              <div
+                className={`badge-verified ${
+                  completedJob.verification?.status === "VERIFIED" ? "verified-pass" : ""
+                }`}
+              >
                 <ShieldCheck size={18} />
-                <span>Verification: {completedJob.verification?.status || "VERIFIED"}</span>
+                <span>Verification: {completedJob.verification?.status ?? "VERIFIED"}</span>
               </div>
             </div>
 
             <p className="success-summary">
               {completedJob.verification?.summary ||
+                completedJob.greenScore?.summary ||
                 "Analysis complete! AI proposed refactoring, physical benchmark telemetry verified efficiency gains."}
             </p>
 
@@ -275,25 +363,34 @@ export default function CodeAnalysis() {
               <div className="mini-stat">
                 <span className="mini-stat-label">Energy Reduction</span>
                 <span className="mini-stat-val text-emerald-400">
-                  {completedJob.energy?.reductionPercent ?? completedJob.verification?.energyReductionPercent ?? 0}%
+                  {completedJob.energy?.reductionPercent ??
+                    completedJob.verification?.energyReductionPercent ??
+                    0}
+                  %
                 </span>
               </div>
               <div className="mini-stat">
                 <span className="mini-stat-label">Carbon Reduction</span>
                 <span className="mini-stat-val text-teal-400">
-                  {completedJob.carbon?.reductionPercent ?? completedJob.verification?.carbonReductionPercent ?? 0}%
+                  {completedJob.carbon?.reductionPercent ??
+                    completedJob.verification?.carbonReductionPercent ??
+                    0}
+                  %
                 </span>
               </div>
               <div className="mini-stat">
                 <span className="mini-stat-label">Runtime Latency</span>
                 <span className="mini-stat-val text-blue-400">
-                  {completedJob.runtimeMetrics?.executionTimeMs?.reductionPercent ?? completedJob.verification?.runtimeReductionPercent ?? 0}% faster
+                  {completedJob.runtimeMetrics?.executionTimeMs?.reductionPercent ??
+                    completedJob.verification?.runtimeReductionPercent ??
+                    0}
+                  % faster
                 </span>
               </div>
               <div className="mini-stat">
                 <span className="mini-stat-label">Static Hotspots</span>
                 <span className="mini-stat-val text-amber-400">
-                  {completedJob.findings?.length || 0}
+                  {completedJob.findings?.length ?? 0}
                 </span>
               </div>
             </div>
@@ -309,11 +406,17 @@ export default function CodeAnalysis() {
         </div>
       )}
 
-      {/* Error Message */}
+      {/* Error Message Card */}
       {errorMsg && (
         <div className="error-card">
-          <p className="font-semibold text-rose-300">Analysis Workflow Failed</p>
-          <p className="text-sm text-rose-200">{errorMsg}</p>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="text-rose-400" size={20} />
+            <p className="font-semibold text-rose-300">Analysis Workflow Failed</p>
+          </div>
+          <p className="text-sm text-rose-200 mt-1">{errorMsg}</p>
+          <button className="btn-secondary mt-3" onClick={handleAnalyze}>
+            Retry Analysis
+          </button>
         </div>
       )}
 
@@ -322,7 +425,8 @@ export default function CodeAnalysis() {
         <div className="editor-card-header">
           <div className="editor-tabs">
             <span className="editor-tab active">
-              {language === "python" ? "service.py" : "service.js"}
+              <FileCode size={14} className="inline mr-1" />
+              {fileName}
             </span>
           </div>
           <span className="editor-hint">
@@ -340,7 +444,7 @@ export default function CodeAnalysis() {
             options={{
               minimap: { enabled: false },
               fontSize: 14,
-              fontFamily: "'Fira Code', 'Courier New', monospace",
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
               automaticLayout: true,
               scrollBeyondLastLine: false,
               tabSize: 4,

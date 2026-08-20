@@ -5,13 +5,13 @@
  * Service layer wrapping Green Score calculations and comparisons for backend API integration.
  */
 
-import { greenScoreEngine, GreenScoreEngine } from "./greenScoreEngine.ts";
+import { greenScoreEngine, GreenScoreEngine } from "./greenScoreEngine";
 import type {
   GreenScoreComparisonResult,
   GreenScoreInput,
   GreenScoreOptions,
   GreenScoreResult
-} from "./types.ts";
+} from "./types";
 
 export class GreenScoreService {
   private engine: GreenScoreEngine;

@@ -6,10 +6,10 @@
  * dimension breakdowns, scoring weights, and comparison metrics.
  */
 
-import type { CodeFinding } from "../analyzer/staticAnalyzer.ts";
-import type { CarbonCalculationResult } from "../carbon/carbonEngine.ts";
-import type { EnergyCalculationResult } from "../energy/energyEngine.ts";
-import type { VerificationMetrics, VerificationResult } from "../verification/types.ts";
+import type { CodeFinding } from "../analyzer/staticAnalyzer";
+import type { CarbonCalculationResult } from "../carbon/carbonEngine";
+import type { EnergyCalculationResult } from "../energy/energyEngine";
+import type { VerificationMetrics, VerificationResult } from "../verification/types";
 
 export type GreenScoreStatus = "CALCULATED" | "INSUFFICIENT_DATA" | "INVALID_INPUT";
 export type GreenScoreRating = "A+" | "A" | "B" | "C" | "D" | "F" | "N/A";

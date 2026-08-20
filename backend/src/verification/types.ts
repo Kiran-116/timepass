@@ -72,3 +72,5 @@ export interface VerificationResult {
   verifiedBy: string;
   verifiedAt: string;
 }
+
+export type VerificationMetrics = VerificationResult["metrics"];

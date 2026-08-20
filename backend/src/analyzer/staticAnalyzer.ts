@@ -13,6 +13,8 @@ export interface AnalysisFinding {
   recommendation: string;
 }
 
+export type CodeFinding = AnalysisFinding;
+
 export interface AnalyzerOptions {
   fileName?: string;
   language?: string;

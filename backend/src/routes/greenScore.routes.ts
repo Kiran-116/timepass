@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { greenScoreService } from "../greenScore/greenScoreService.ts";
+import { greenScoreService } from "../greenScore/greenScoreService";
 
 const router = Router();
 

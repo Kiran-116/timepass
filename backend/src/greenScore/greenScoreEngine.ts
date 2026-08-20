@@ -5,9 +5,9 @@
  * Calculates a deterministic, explainable product metric (0-100) representing software workload sustainability.
  */
 
-import type { CarbonCalculationResult } from "../carbon/carbonEngine.ts";
-import type { EnergyCalculationResult } from "../energy/energyEngine.ts";
-import type { VerificationMetrics, VerificationResult } from "../verification/types.ts";
+import type { CarbonCalculationResult } from "../carbon/carbonEngine";
+import type { EnergyCalculationResult } from "../energy/energyEngine";
+import type { VerificationMetrics, VerificationResult } from "../verification/types";
 import type {
   ComparisonStatus,
   GreenScoreComparisonResult,
@@ -18,7 +18,7 @@ import type {
   GreenScoreResult,
   GreenScoreStatus,
   GreenScoreWeights
-} from "./types.ts";
+} from "./types";
 
 export const PRODUCT_METRIC_NOTICE =
   "Green Score is a GreenOps product metric for comparative software sustainability benchmarking and is not an official carbon rating or universal industry standard.";
@@ -168,7 +168,7 @@ export class GreenScoreEngine {
    * Helper to compute comparison directly from Phase 9 VerificationResult
    */
   public calculateFromVerification(verificationResult: VerificationResult): GreenScoreComparisonResult {
-    if (!verificationResult || !verificationResult.before || !verificationResult.after) {
+    if (!verificationResult || !verificationResult.metrics) {
       const emptyResult: GreenScoreResult = {
         status: "INSUFFICIENT_DATA",
         score: null,
@@ -190,24 +190,25 @@ export class GreenScoreEngine {
       };
     }
 
+    const m = verificationResult.metrics;
     const beforeInput: GreenScoreInput = {
       telemetry: {
-        executionTimeMs: verificationResult.before.executionTimeMs,
-        cpuUsagePercent: verificationResult.before.cpuUsagePercent,
-        memoryMb: verificationResult.before.memoryMb
+        executionTimeMs: m.executionTimeMs?.original ?? 0,
+        cpuUsagePercent: m.cpuUsagePercent?.original ?? 0,
+        memoryMb: m.memoryMb?.original ?? 0
       },
-      energy: { energyWh: verificationResult.before.energyWh } as EnergyCalculationResult,
-      carbon: { carbonEmissionsGrams: verificationResult.before.carbonGrams } as CarbonCalculationResult
+      energy: { energyWh: m.energyWh?.original ?? 0 } as EnergyCalculationResult,
+      carbon: { carbonEmissionsGrams: m.carbonGrams?.original ?? 0 } as CarbonCalculationResult
     };
 
     const afterInput: GreenScoreInput = {
       telemetry: {
-        executionTimeMs: verificationResult.after.executionTimeMs,
-        cpuUsagePercent: verificationResult.after.cpuUsagePercent,
-        memoryMb: verificationResult.after.memoryMb
+        executionTimeMs: m.executionTimeMs?.optimized ?? 0,
+        cpuUsagePercent: m.cpuUsagePercent?.optimized ?? 0,
+        memoryMb: m.memoryMb?.optimized ?? 0
       },
-      energy: { energyWh: verificationResult.after.energyWh } as EnergyCalculationResult,
-      carbon: { carbonEmissionsGrams: verificationResult.after.carbonGrams } as CarbonCalculationResult
+      energy: { energyWh: m.energyWh?.optimized ?? 0 } as EnergyCalculationResult,
+      carbon: { carbonEmissionsGrams: m.carbonGrams?.optimized ?? 0 } as CarbonCalculationResult
     };
 
     return this.compareScores(beforeInput, afterInput);

@@ -5,7 +5,7 @@
  * Generates structured optimizations & explanations without fabricating numerical carbon metrics.
  */
 
-import { buildUserPrompt, SYSTEM_PROMPT } from "./prompts.ts";
+import { buildUserPrompt, SYSTEM_PROMPT } from "./prompts";
 import type { AiAgentInputContext, AiAgentOutput, ExpectedImpactQualitative, ResourceImpactQualitative } from "./types";
 
 // Safe env loader fallback

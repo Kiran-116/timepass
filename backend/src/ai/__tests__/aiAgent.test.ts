@@ -14,9 +14,9 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { AiAgentEngine, aiAgentEngine } from "../aiAgent.ts";
-import { buildUserPrompt, SYSTEM_PROMPT } from "../prompts.ts";
-import type { AiAgentInputContext } from "../types.ts";
+import { AiAgentEngine, aiAgentEngine } from "../aiAgent";
+import { buildUserPrompt, SYSTEM_PROMPT } from "../prompts";
+import type { AiAgentInputContext } from "../types";
 
 describe("Phase 8: AI Agent Unit Tests", () => {
   // Test 1: Valid structured output & schema validation

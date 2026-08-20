@@ -1,6 +1,6 @@
 /**
  * GreenOps AI - Phase 11: Pipeline Types & DTOs
- * 
+ *
  * Defines request, response, job lifecycle status, and unified analysis structures.
  */
 
@@ -40,6 +40,12 @@ export interface AnalysisRequestDTO {
   warmupRuns?: number;
   measuredRuns?: number;
   timeoutMs?: number;
+  type?: "CODE" | "PR" | "BENCHMARK";
+  prNumber?: number;
+  repoFullName?: string;
+  commitSha?: string | null;
+  prTitle?: string;
+  prUrl?: string;
 }
 
 export interface MetricComparisonDTO {
@@ -97,6 +103,7 @@ export interface AnalysisSummaryDTO {
 export interface AnalysisJob {
   analysisId: string;
   projectId?: string | null;
+  type?: "CODE" | "PR" | "BENCHMARK";
   status: AnalysisJobStatus;
   stage: PipelineStage;
   stageProgress: number; // 0–100%
@@ -104,6 +111,14 @@ export interface AnalysisJob {
   fileName: string;
   originalCode: string;
   optimizedCode?: string;
+
+  // PR specific metadata
+  prNumber?: number;
+  repoFullName?: string;
+  commitSha?: string | null;
+  prTitle?: string;
+  prUrl?: string;
+  reportMarkdown?: string;
 
   findings?: AnalysisFinding[];
   aiExplanation?: AiExplanationDTO;

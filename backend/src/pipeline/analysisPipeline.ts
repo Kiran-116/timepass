@@ -1,6 +1,6 @@
 /**
  * GreenOps AI - Phase 11: End-to-End Analysis Pipeline Orchestrator
- * 
+ *
  * Core Principle: AI proposes. Measurement verifies.
  * Coordinates all modules in the end-to-end analysis workflow:
  * Developer Code → Static Analyzer → AI Explainer → AI Optimizer
@@ -16,11 +16,7 @@ import { energyEngine } from "../energy/energyEngine";
 import { greenScoreEngine } from "../score/greenScoreEngine";
 import { verificationEngine } from "../verification/verificationEngine";
 import { pipelineStore } from "./pipelineStore";
-import type {
-  AnalysisJob,
-  AnalysisRequestDTO,
-  PipelineStage,
-} from "./types";
+import type { AnalysisJob, AnalysisRequestDTO, PipelineStage } from "./types";
 
 export class AnalysisPipeline {
   /**
@@ -52,6 +48,12 @@ export class AnalysisPipeline {
     const job = pipelineStore.createJob({
       analysisId,
       projectId: projectId || null,
+      type: request.type || "CODE",
+      prNumber: request.prNumber,
+      repoFullName: request.repoFullName,
+      commitSha: request.commitSha || null,
+      prTitle: request.prTitle,
+      prUrl: request.prUrl,
       status: "QUEUED",
       stage: "INITIALIZING",
       stageProgress: 0,
@@ -218,9 +220,15 @@ export class AnalysisPipeline {
       const energyReduction = verification.energyReductionPercent;
       const carbonReduction = verification.carbonReductionPercent;
 
-      const energySavingsWh = Number((originalEnergy.energyWh - optimizedEnergy.energyWh).toFixed(8));
-      const energySavingsJoules = Number((originalEnergy.energyJoules - optimizedEnergy.energyJoules).toFixed(6));
-      const carbonSavingsGrams = Number((originalCarbon.carbonEmissionsGrams - optimizedCarbon.carbonEmissionsGrams).toFixed(8));
+      const energySavingsWh = Number(
+        (originalEnergy.energyWh - optimizedEnergy.energyWh).toFixed(8)
+      );
+      const energySavingsJoules = Number(
+        (originalEnergy.energyJoules - optimizedEnergy.energyJoules).toFixed(6)
+      );
+      const carbonSavingsGrams = Number(
+        (originalCarbon.carbonEmissionsGrams - optimizedCarbon.carbonEmissionsGrams).toFixed(8)
+      );
 
       const highFindings = findings.filter((f) => f.severity === "HIGH").length;
       const mediumFindings = findings.filter((f) => f.severity === "MEDIUM").length;

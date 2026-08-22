@@ -92,7 +92,7 @@ export class GitHubService {
       const filesUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/files`;
       const filesRes = await fetch(filesUrl, { headers: filesHeaders });
       if (filesRes.ok) {
-        files = await filesRes.json();
+        files = (await filesRes.json()) as any[];
       }
     } catch (err) {
       console.warn(`[GitHubService] Network error fetching PR files list:`, (err as Error).message);
@@ -367,12 +367,12 @@ ${job.optimizedCode || "# See GreenOps dashboard for full optimized code diff"}
         };
       }
 
-      const createdComment = await res.json();
-      console.log(`[GitHubService] Successfully posted PR comment (ID: ${createdComment.id})`);
+      const createdComment = (await res.json()) as any;
+      console.log(`[GitHubService] Successfully posted PR comment (ID: ${createdComment?.id})`);
       return {
         posted: true,
-        commentId: createdComment.id,
-        htmlUrl: createdComment.html_url,
+        commentId: createdComment?.id,
+        htmlUrl: createdComment?.html_url,
       };
     } catch (err) {
       console.error("[GitHubService] Error posting PR comment:", err);
